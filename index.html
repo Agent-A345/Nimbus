@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Nimbus — Live Weather</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+</head>
+<body>
+
+  <div class="bg-canvas">
+    <div class="weather-particles" id="weatherParticles"></div>
+    <div class="bg-gradient" id="bgGradient"></div>
+  </div>
+
+  <div class="alert-banner" id="alertBanner" style="display:none">
+    <span>⚠️</span>
+    <span id="alertText"></span>
+    <button onclick="document.getElementById('alertBanner').style.display='none'">✕</button>
+  </div>
+
+  <div class="app-shell">
+
+    <header class="top-bar">
+      <div class="logo"><span class="logo-mark">◈</span><span class="logo-text">Nimbus</span></div>
+      <div class="search-group">
+        <div class="search-wrap">
+          <input type="text" id="searchInput" class="search-input" placeholder="Search city…" autocomplete="off" />
+          <div class="suggestions-box" id="suggestionsBox"></div>
+        </div>
+        <button class="btn-icon" id="locationBtn" title="My Location">📍</button>
+        <button class="btn-pill" id="unitToggle">°C</button>
+        <button class="btn-icon" id="themeToggle">🌙</button>
+      </div>
+    </header>
+
+    <div class="recents-row" id="recentsRow"></div>
+
+    <div class="view-toggle-row">
+      <div class="live-badge" id="liveBadge" style="visibility:hidden">
+        <span class="live-dot"></span> Live · <span id="updatedAt">just now</span>
+      </div>
+      <div class="view-tabs">
+        <button class="view-tab active" data-view="single">Single</button>
+        <button class="view-tab" data-view="multi">Multi-City</button>
+      </div>
+    </div>
+
+    <main>
+
+      <!-- SINGLE VIEW -->
+      <section id="singleView">
+
+        <div class="skeleton-wrap" id="skeletonWrap">
+          <div class="skeleton skeleton-hero"></div>
+          <div class="skeleton skeleton-row"></div>
+          <div class="skeleton skeleton-row short"></div>
+        </div>
+
+        <div class="error-card glass" id="errorCard" style="display:none">
+          <div style="font-size:3rem">🌐</div>
+          <div id="errorMsg" style="margin:10px 0;color:var(--text-secondary)">Something went wrong.</div>
+          <button class="btn-pill" onclick="retryLast()">Retry</button>
+        </div>
+
+        <div class="hero-card glass" id="heroCard" style="display:none">
+          <div class="hero-left">
+            <div class="city-name" id="cityName">—</div>
+            <div class="city-meta">
+              <span id="cityCountry">—</span> &nbsp;·&nbsp;
+              <span id="localTime">--:--</span>
+            </div>
+            <div class="temp-display">
+              <span class="temp-value" id="tempValue">--</span>
+              <span class="temp-unit" id="tempUnit">°C</span>
+            </div>
+            <div class="condition-row">
+              <span class="condition-icon" id="conditionIcon">⛅</span>
+              <span class="condition-label" id="conditionLabel">—</span>
+            </div>
+            <div class="feels-row">Feels like <strong id="feelsLike">--</strong></div>
+          </div>
+          <div class="hero-right">
+            <div class="animated-icon-wrap" id="animatedIcon">⛅</div>
+            <div class="sun-times">
+              <div class="sun-item">🌅 <span id="sunriseTime">--</span></div>
+              <div class="sun-item">🌇 <span id="sunsetTime">--</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="metrics-row glass" id="metricsRow" style="display:none">
+          <div class="metric-card"><div class="metric-icon">💧</div><div class="metric-value" id="humidity">--%</div><div class="metric-label">Humidity</div></div>
+          <div class="metric-card"><div class="metric-icon">💨</div><div class="metric-value" id="windSpeed">--</div><div class="metric-label">Wind km/h</div></div>
+          <div class="metric-card"><div class="metric-icon">🔵</div><div class="metric-value" id="pressure">--</div><div class="metric-label">hPa</div></div>
+          <div class="metric-card"><div class="metric-icon">👁</div><div class="metric-value" id="visibility">--</div><div class="metric-label">Vis. km</div></div>
+          <div class="metric-card"><div class="metric-icon">🌧</div><div class="metric-value" id="precip">--</div><div class="metric-label">Precip mm</div></div>
+          <div class="metric-card"><div class="metric-icon">🔆</div><div class="metric-value" id="uvIndex">--</div><div class="metric-label">UV Index</div></div>
+        </div>
+
+        <div class="smart-tip glass" id="smartTip" style="display:none">
+          <span class="tip-icon" id="tipIcon">💡</span>
+          <span class="tip-text" id="tipText"></span>
+        </div>
+
+        <div class="forecast-section" id="forecastSection" style="display:none">
+          <div class="section-title">7-Day Forecast</div>
+          <div class="forecast-scroll" id="forecastScroll"></div>
+        </div>
+
+        <div class="chart-section glass" id="chartSection" style="display:none">
+          <div class="section-title">24-Hour Temperature</div>
+          <canvas id="tempChart" height="130"></canvas>
+        </div>
+
+      </section>
+
+      <!-- MULTI VIEW -->
+      <section id="multiView" style="display:none">
+        <div class="multi-header">
+          <span class="section-title">City Comparison</span>
+          <button class="btn-add-city" id="addCityBtn">+ Add City</button>
+        </div>
+        <div class="add-city-modal glass" id="addCityModal" style="display:none">
+          <input type="text" id="addCityInput" class="search-input" placeholder="Type city name…" />
+          <div class="modal-suggestions" id="modalSuggestions"></div>
+        </div>
+        <div class="multi-grid" id="multiGrid"></div>
+      </section>
+
+    </main>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
